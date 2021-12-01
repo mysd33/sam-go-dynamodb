@@ -1,0 +1,94 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: 'sam-app
+
+  SAM Template for sam-app
+
+  '
+Globals:
+  Function:
+    Timeout: 5
+Parameters:
+  Region:
+    Type: String
+    Default: ap-northeast-1
+Resources:
+  PostUsersFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: PostUsersFunction
+      Handler: users
+      Runtime: go1.x
+      Policies: AmazonDynamoDBFullAccess
+      Tracing: Active
+      Events:
+        PostEvent:
+          Type: Api
+          Properties:
+            Path: /users
+            Method: POST
+      Environment:
+        Variables:
+          REGION:
+            Ref: Region
+  GetUsersFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: GetUsersFunction
+      Handler: users
+      Runtime: go1.x
+      Policies:
+      - AmazonDynamoDBReadOnlyAccess
+      Tracing: Active
+      Events:
+        GetEvent:
+          Type: Api
+          Properties:
+            Path: /users/{user_id}
+            Method: Get
+      Environment:
+        Variables:
+          REGION:
+            Ref: Region
+  UsersTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: users
+      KeySchema:
+      - AttributeName: user_id
+        KeyType: HASH
+      AttributeDefinitions:
+      - AttributeName: user_id
+        AttributeType: S
+      ProvisionedThroughput:
+        ReadCapacityUnits: 1
+        WriteCapacityUnits: 1
+Outputs:
+  UsersAPI:
+    Description: API Gateway endpoint URL for Prod environment for First Function
+    Value:
+      Fn::Sub: https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/users/
+  GetUsersFunction:
+    Description: Get Users Lambda Function ARN
+    Value:
+      Fn::GetAtt:
+      - GetUsersFunction
+      - Arn
+  GetUsersFunctionIamRole:
+    Description: Implicit IAM Role created for Get Users function
+    Value:
+      Fn::GetAtt:
+      - GetUsersFunctionRole
+      - Arn
+  PostUsersFunction:
+    Description: Post Users Lambda Function ARN
+    Value:
+      Fn::GetAtt:
+      - PostUsersFunction
+      - Arn
+  PostUsersFunctionIamRole:
+    Description: Implicit IAM Role created for Post Users function
+    Value:
+      Fn::GetAtt:
+      - PostUsersFunctionRole
+      - Arn
