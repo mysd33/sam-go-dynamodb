@@ -21,7 +21,7 @@ Resources:
     Properties:
       CodeUri: users/
       Handler: users
-      Runtime: go1.x
+      Runtime: go1.x      
       Policies: AmazonDynamoDBFullAccess
       Tracing: Active # https://docs.aws.amazon.com/lambda/latest/dg/lambda-x-ray.html
       Events:
@@ -33,6 +33,11 @@ Resources:
       Environment: 
         Variables:
           REGION: !Ref Region
+      #Deployment Configurtion           
+      AutoPublishAlias: live            
+      DeploymentPreference:
+        Type: Linear10PercentEvery1Minute
+
   GetUsersFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -51,7 +56,11 @@ Resources:
       Environment: 
         Variables:
           REGION: !Ref Region
-            
+      #Deployment Configurtion           
+      AutoPublishAlias: live
+      DeploymentPreference:
+        Type: Linear10PercentEvery1Minute
+
   UsersTable:
     Type: AWS::DynamoDB::Table
     Properties:
@@ -77,11 +86,18 @@ Outputs:
     Description: "Get Users Lambda Function ARN"
     Value: !GetAtt GetUsersFunction.Arn
   GetUsersFunctionIamRole:
-    Description: "Implicit IAM Role created for Get Users function"
+    Description: "Implicit IAM Role created for Get Users function ARN"
     Value: !GetAtt GetUsersFunctionRole.Arn
+  GetUsersFunctionDeploymentGroup :
+    Description: "Get Users Lambda Function DeploymentGroup ARN"
+    Value: !Ref GetUsersFunctionDeploymentGroup
   PostUsersFunction:
     Description: "Post Users Lambda Function ARN"
     Value: !GetAtt PostUsersFunction.Arn
   PostUsersFunctionIamRole:
-    Description: "Implicit IAM Role created for Post Users function"
+    Description: "Implicit IAM Role created for Post Users function ARN"
     Value: !GetAtt PostUsersFunctionRole.Arn
+  PostUsersFunctionDeploymentGroup :
+    Description: "Post Users Lambda Function DeploymentGroup ARN"
+    Value: !Ref PostUsersFunctionDeploymentGroup
+
