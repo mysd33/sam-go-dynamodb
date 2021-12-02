@@ -36,7 +36,8 @@ Resources:
       #Deployment Configurtion           
       AutoPublishAlias: live            
       DeploymentPreference:
-        Type: Linear10PercentEvery1Minute
+        #Type: Linear10PercentEvery1Minute
+        Type: AllAtOnce
 
   GetUsersFunction:
     Type: AWS::Serverless::Function
@@ -59,7 +60,8 @@ Resources:
       #Deployment Configurtion           
       AutoPublishAlias: live
       DeploymentPreference:
-        Type: Linear10PercentEvery1Minute
+        #Type: Linear10PercentEvery1Minute
+        Type: AllAtOnce
 
   UsersTable:
     Type: AWS::DynamoDB::Table
