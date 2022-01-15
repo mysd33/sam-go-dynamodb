@@ -3,9 +3,9 @@ version = 0.1
 [default.deploy]
 [default.deploy.parameters]
 stack_name = "sam-app"
-s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-1pozv7okgs1si"
+s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-1ocjq14dbucjg"
 s3_prefix = "sam-app"
 region = "ap-northeast-1"
 confirm_changeset = true
 capabilities = "CAPABILITY_IAM"
-parameter_overrides = "Region=\"ap-northeast-1\""
+parameter_overrides = "Region=\"ap-northeast-1\" UsersTableName=\"users\""

@@ -17,7 +17,7 @@ var (
 	// ErrResponse
 	ErrResponse = errors.New("Error")
 )
-var UserRepository db.DB
+var UserRepository db.UserRepository
 
 type request struct {
 	Name string `json:"name"`
@@ -28,6 +28,9 @@ func init() {
 }
 
 func handler(ctx context.Context, request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
+	//ctxの格納
+	UserRepository.Context = ctx
+
 	//Get
 	if request.HTTPMethod == http.MethodGet {
 		return getHandler(ctx, request)
@@ -44,7 +47,8 @@ func getHandler(ctx context.Context, request events.APIGatewayProxyRequest) (eve
 			errorResponseBody(err.Error()),
 		), nil
 	}
-	result, err := UserRepository.GetUser(userId, ctx)
+	//result, err := UserRepository.GetUser(userId, ctx)
+	result, err := UserRepository.GetUser(userId)
 	if err != nil {
 		return response(
 			http.StatusBadRequest,
@@ -69,7 +73,8 @@ func postHandler(ctx context.Context, request events.APIGatewayProxyRequest) (ev
 
 	user := db.User{}
 	user.Name = p.Name
-	result, err := UserRepository.PutUser(&user, ctx)
+	//result, err := UserRepository.PutUser(&user, ctx)
+	result, err := UserRepository.PutUser(&user)
 	if err != nil {
 		return response(
 			http.StatusBadRequest,

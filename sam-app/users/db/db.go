@@ -10,17 +10,19 @@ import (
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
 	"github.com/aws/aws-xray-sdk-go/xray"
 	"github.com/pkg/errors"
+
+	//TODO: Googleのuuidに変える
 	"github.com/teris-io/shortid"
 )
 
 var (
-	Region = os.Getenv("REGION")
+	region    = os.Getenv("REGION")
+	userTable = os.Getenv("USERS_TABLE_NAME")
 )
 
-type DB struct {
+type UserRepository struct {
 	Instance *dynamodb.DynamoDB
-	//TODO: context使っていない？
-	ctx context.Context
+	Context  context.Context
 }
 
 type User struct {
@@ -28,20 +30,23 @@ type User struct {
 	Name string `json:"user_name"`
 }
 
-func New() DB {
+func New() UserRepository {
 	sess := session.Must(session.NewSession(&aws.Config{
-		Region: aws.String(Region)}),
+		Region: aws.String(region)}),
 	)
 	dynamo := dynamodb.New(sess)
 	xray.AWS(dynamo.Client)
-	return DB{Instance: dynamo}
+	return UserRepository{Instance: dynamo}
 }
 
-func (d DB) GetUser(userId string, ctx context.Context) (*User, error) {
+func (d UserRepository) GetUser(userId string) (*User, error) {
+	return d.doGetUser(userId, d.Context)
+}
+
+func (d UserRepository) doGetUser(userId string, ctx context.Context) (*User, error) {
 	//Itemの取得（X-Rayトレース）
 	result, err := d.Instance.GetItemWithContext(ctx, &dynamodb.GetItemInput{
-		//TODO: テーブル名切り出し
-		TableName: aws.String("users"),
+		TableName: aws.String(userTable),
 		//TODO: map[string]*の意味わからず
 		Key: map[string]*dynamodb.AttributeValue{
 			"user_id": {
@@ -63,7 +68,11 @@ func (d DB) GetUser(userId string, ctx context.Context) (*User, error) {
 	return &user, nil
 }
 
-func (d DB) PutUser(user *User, ctx context.Context) (*User, error) {
+func (d UserRepository) PutUser(user *User) (*User, error) {
+	return d.doPutUser(user, d.Context)
+}
+
+func (d UserRepository) doPutUser(user *User, ctx context.Context) (*User, error) {
 	//ID採番
 	userId := shortid.MustGenerate()
 	user.ID = userId
@@ -72,10 +81,9 @@ func (d DB) PutUser(user *User, ctx context.Context) (*User, error) {
 	if err != nil {
 		return nil, err
 	}
-	//TODO: テーブル名切り出し
 	input := &dynamodb.PutItemInput{
 		Item:      av,
-		TableName: aws.String("users"),
+		TableName: aws.String(userTable),
 	}
 	//Itemの登録（X-Rayトレース）
 	_, err = d.Instance.PutItemWithContext(ctx, input)
