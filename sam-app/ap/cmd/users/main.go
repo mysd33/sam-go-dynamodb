@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"net/http"
 
+	"example.com/apbase/pkg/api"
+
 	"ap/internal/db"
 	apsvc "ap/internal/service"
 
@@ -19,82 +21,68 @@ var (
 	userService apsvc.UserService
 	// Repository
 	userRepository db.UserRepository
-	// ErrResponse
-	//errResponse = errors.New("Error")
 )
 
+//リクエストデータ
 type request struct {
 	Name string `json:"name"`
 }
 
+//コードルドスタート時の初期化処理
 func init() {
 	userRepository = db.NewUserRepository()
 	userService = apsvc.UserService{Repository: &userRepository}
 }
 
+//ハンドラメソッド
 func handler(ctx context.Context, request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
 	//TODO: dynamoDBのAP基盤機能側でContext格納するようにリファクタ
 	//ctxの格納
 	userRepository.Context = ctx
 
-	//Get
+	//Getリクエストの処理
 	if request.HTTPMethod == http.MethodGet {
 		return getHandler(ctx, request)
 	}
-	//Post
+	//Postリクエストの処理
 	return postHandler(ctx, request)
 }
 
+//Getリクエストの処理
 func getHandler(ctx context.Context, request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
+	//リクエストデータの解析
 	userId, err := parseGetRequest(request)
 	if err != nil {
-		return response(
-			http.StatusBadRequest,
-			errorResponseBody(err.Error()),
-		), nil
+		return api.ErrorResponse(err)
 	}
-
 	//サービスの実行
 	result, err := userService.Find(userId)
-
 	if err != nil {
-		return response(
-			http.StatusBadRequest,
-			errorResponseBody(err.Error()),
-		), nil
+		return api.ErrorResponse(err)
 	}
-	return response(
-		http.StatusOK,
-		fmt.Sprintf("UserName: %v", result.Name),
-	), nil
+	//レスポンスデータの返却
+	resultString := formatResponse(result)
+	return api.OkResponse(resultString)
 }
 
+//Postリクエストの処理
 func postHandler(ctx context.Context, request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
-	//parse Request
+	//リクエストデータの解析
 	p, err := parsePostRequest(request)
 	if err != nil {
-		return response(
-			http.StatusBadRequest,
-			errorResponseBody(err.Error()),
-		), nil
+		return api.ErrorResponse(err)
 	}
-
 	//サービスの実行
 	result, err := userService.Regist(p.Name)
-
 	if err != nil {
-		return response(
-			http.StatusBadRequest,
-			errorResponseBody(err.Error()),
-		), nil
+		return api.ErrorResponse(err)
 	}
-
-	return response(
-		http.StatusOK,
-		fmt.Sprintf("UserId: %v", result.ID),
-	), nil
+	//レスポンスデータの返却
+	resultString := formatResponse(result)
+	return api.OkResponse(resultString)
 }
 
+//Getリクエストデータの解析
 func parseGetRequest(req events.APIGatewayProxyRequest) (string, error) {
 	if req.HTTPMethod != http.MethodGet {
 		return "", fmt.Errorf("use GET request")
@@ -103,6 +91,7 @@ func parseGetRequest(req events.APIGatewayProxyRequest) (string, error) {
 	return userId, nil
 }
 
+//Postリクエストデータの解析
 func parsePostRequest(req events.APIGatewayProxyRequest) (*request, error) {
 	var r request
 	if req.HTTPMethod != http.MethodPost {
@@ -114,25 +103,16 @@ func parsePostRequest(req events.APIGatewayProxyRequest) (*request, error) {
 		return &r, errors.Wrapf(err, "failed to parse request")
 	}
 
-	if err != nil {
-		return &r, errors.Wrapf(err, "invalid URL")
-	}
-
 	return &r, nil
 }
 
-func response(code int, body string) events.APIGatewayProxyResponse {
-	return events.APIGatewayProxyResponse{
-		StatusCode: code,
-		Body:       body,
-		Headers:    map[string]string{"Content-Type": "application/json"},
-	}
+//レスポンスデータの生成
+func formatResponse(user *db.User) string {
+	resp, _ := json.Marshal(user)
+	return string(resp)
 }
 
-func errorResponseBody(msg string) string {
-	return fmt.Sprintf("{\"message\":\"%s\"}", msg)
-}
-
+//Main関数
 func main() {
 	lambda.Start(handler)
 }
