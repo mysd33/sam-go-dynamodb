@@ -3,6 +3,7 @@ package db
 import (
 	"context"
 	"os"
+	"users/id"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -10,9 +11,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
 	"github.com/aws/aws-xray-sdk-go/xray"
 	"github.com/pkg/errors"
-
-	//TODO: Googleのuuidに変える
-	"github.com/teris-io/shortid"
 )
 
 var (
@@ -74,7 +72,7 @@ func (d UserRepository) PutUser(user *User) (*User, error) {
 
 func (d UserRepository) doPutUser(user *User, ctx context.Context) (*User, error) {
 	//ID採番
-	userId := shortid.MustGenerate()
+	userId := id.GenerateId()
 	user.ID = userId
 
 	av, err := dynamodbattribute.MarshalMap(user)

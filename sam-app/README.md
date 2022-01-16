@@ -2,9 +2,7 @@
 
 curl -X POST -H "Content-Type: application/json" -d '{ "name" : "Taro"}' https://42b4c7bk9g.execute-api.ap-northeast-1.amazonaws.com/Prod/users
 
-
-curl https://42b4c7bk9g.execute-api.ap-northeast-1.amazonaws.com/Prod/users/dmYCejp7g
-
+curl https://civuzxdd14.execute-api.ap-northeast-1.amazonaws.com/Prod/users/d4d6cb7f-7691-11ec-9520-1ee887dd490e
 
 # sam-app
 
