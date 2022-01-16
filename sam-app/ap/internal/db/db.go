@@ -2,8 +2,9 @@ package db
 
 import (
 	"context"
-	"example.com/apbase/pkg/id"
 	"os"
+
+	"example.com/apbase/pkg/id"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -28,7 +29,7 @@ type User struct {
 	Name string `json:"user_name"`
 }
 
-func New() UserRepository {
+func NewUserRepository() UserRepository {
 	sess := session.Must(session.NewSession(&aws.Config{
 		Region: aws.String(region)}),
 	)

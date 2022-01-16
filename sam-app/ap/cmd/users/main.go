@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	"ap/internal/db"
+	apsvc "ap/internal/service"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
@@ -14,22 +15,27 @@ import (
 )
 
 var (
+	// Service
+	userService apsvc.UserService
+	// Repository
+	userRepository db.UserRepository
 	// ErrResponse
-	ErrResponse = errors.New("Error")
+	//errResponse = errors.New("Error")
 )
-var UserRepository db.UserRepository
 
 type request struct {
 	Name string `json:"name"`
 }
 
 func init() {
-	UserRepository = db.New()
+	userRepository = db.NewUserRepository()
+	userService = apsvc.UserService{Repository: &userRepository}
 }
 
 func handler(ctx context.Context, request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
+	//TODO: dynamoDBのAP基盤機能側でContext格納するようにリファクタ
 	//ctxの格納
-	UserRepository.Context = ctx
+	userRepository.Context = ctx
 
 	//Get
 	if request.HTTPMethod == http.MethodGet {
@@ -47,8 +53,10 @@ func getHandler(ctx context.Context, request events.APIGatewayProxyRequest) (eve
 			errorResponseBody(err.Error()),
 		), nil
 	}
-	//result, err := UserRepository.GetUser(userId, ctx)
-	result, err := UserRepository.GetUser(userId)
+
+	//サービスの実行
+	result, err := userService.Find(userId)
+
 	if err != nil {
 		return response(
 			http.StatusBadRequest,
@@ -71,10 +79,9 @@ func postHandler(ctx context.Context, request events.APIGatewayProxyRequest) (ev
 		), nil
 	}
 
-	user := db.User{}
-	user.Name = p.Name
-	//result, err := UserRepository.PutUser(&user, ctx)
-	result, err := UserRepository.PutUser(&user)
+	//サービスの実行
+	result, err := userService.Regist(p.Name)
+
 	if err != nil {
 		return response(
 			http.StatusBadRequest,
