@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"users/db"
+	"ap/internal/db"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"

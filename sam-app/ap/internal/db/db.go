@@ -2,8 +2,8 @@ package db
 
 import (
 	"context"
+	"example.com/apbase/pkg/id"
 	"os"
-	"users/id"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
