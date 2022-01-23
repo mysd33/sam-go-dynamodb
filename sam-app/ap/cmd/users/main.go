@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 
 	"example.com/apbase/pkg/api"
@@ -14,6 +15,7 @@ import (
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/pkg/errors"
+	"github.com/spf13/viper"
 )
 
 var (
@@ -21,17 +23,55 @@ var (
 	userService apsvc.UserService
 	// Repository
 	userRepository db.UserRepository
+	// Config
+	config *Config
 )
 
+//設定ファイルの構造体(Viper)
+type Config struct {
+	Hoge Hoge `yaml:hoge`
+}
+
+//TODO: とりあえずのサンプル
+type Hoge struct {
+	Name string `yaml:name`
+}
+
 //リクエストデータ
+//TODO: request → Request
 type request struct {
 	Name string `json:"name"`
+}
+
+//設定ファイルのロード
+func loadConfig() (*Config, error) {
+	viper.SetConfigName("config")
+	viper.SetConfigType("yaml")
+	viper.AddConfigPath("config/")
+	err := viper.ReadInConfig()
+	if err != nil {
+		return nil, errors.Errorf("設定ファイル読み込みエラー")
+	}
+	var cfg Config
+	err = viper.Unmarshal(&cfg)
+	if err != nil {
+		return nil, errors.Errorf("設定ファイルアンマーシャルエラー")
+	}
+	return &cfg, nil
 }
 
 //コードルドスタート時の初期化処理
 func init() {
 	userRepository = db.NewUserRepository()
 	userService = apsvc.UserService{Repository: &userRepository}
+
+	var err error
+	config, err = loadConfig()
+	if err != nil {
+		//TODO: エラーハンドリング
+		log.Fatalf("初期化処理エラー:%s", err.Error())
+	}
+
 }
 
 //ハンドラメソッド
@@ -39,6 +79,9 @@ func handler(ctx context.Context, request events.APIGatewayProxyRequest) (events
 	//TODO: dynamoDBのAP基盤機能側でContext格納するようにリファクタ
 	//ctxの格納
 	userRepository.Context = ctx
+
+	//TODO: とりあえずの設定ファイルの読み込み確認
+	log.Printf("hoge.name=%s", config.Hoge.Name)
 
 	//Getリクエストの処理
 	if request.HTTPMethod == http.MethodGet {
