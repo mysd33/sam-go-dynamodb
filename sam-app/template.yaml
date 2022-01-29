@@ -22,6 +22,7 @@ Resources:
   PostUsersFunction:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
     Properties:
+      FunctionName: post-user-function
       CodeUri: ap/cmd/users/
       Handler: users
       Runtime: go1.x      
@@ -46,6 +47,7 @@ Resources:
   GetUsersFunction:
     Type: AWS::Serverless::Function
     Properties:
+      FunctionName: get-user-function
       CodeUri: ap/cmd/users/
       Handler: users
       Runtime: go1.x
