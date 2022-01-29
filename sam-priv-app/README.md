@@ -8,6 +8,7 @@ aws cloudformation create-stack --stack-name Demo-VPC-Stack --template-body file
 ```
 
 ## 3. EC2(Bastion)用Security Groupの作成
+* 現状は作成不要。VPC内Lambdaを作成しインターネットに接続する場合に必要となる。
 ```sh
 aws cloudformation validate-template --template-body file://cfn-sg.yaml
 aws cloudformation create-stack --stack-name Demo-SG-Stack --template-body file://cfn-sg.yaml
@@ -27,7 +28,8 @@ aws cloudformation create-stack --stack-name Demo-NATGW-Stack --template-body fi
 ## 4. AWS SAMでLambda/API Gatewayの実行
 * SAMビルド
 ```sh
-cd ../sam-priv-app
+#sam-priv-appフォルダに戻る
+cd ..
 sam build
 ```
 * 必要に応じてローカル実行可能
