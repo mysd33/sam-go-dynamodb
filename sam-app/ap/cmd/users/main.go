@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strings"
 
 	"example.com/apbase/pkg/api"
 
@@ -48,6 +49,11 @@ func loadConfig() (*Config, error) {
 	viper.SetConfigName("config")
 	viper.SetConfigType("yaml")
 	viper.AddConfigPath("config/")
+	// 環境変数がすでに指定されてる場合はそちらを優先させる
+	viper.AutomaticEnv()
+	// データ構造をキャメルケースに切り替える用の設定
+	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
+
 	err := viper.ReadInConfig()
 	if err != nil {
 		return nil, errors.Errorf("設定ファイル読み込みエラー")
@@ -70,6 +76,7 @@ func init() {
 	if err != nil {
 		//TODO: エラーハンドリング
 		log.Fatalf("初期化処理エラー:%s", err.Error())
+		panic(err.Error())
 	}
 
 }

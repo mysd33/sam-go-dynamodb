@@ -1,0 +1,9 @@
+version = 0.1
+[default]
+[default.deploy]
+[default.deploy.parameters]
+stack_name = "sam-priv-app"
+s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-1j3mbh1mror1b"
+s3_prefix = "sam-priv-app"
+region = "ap-northeast-1"
+capabilities = "CAPABILITY_IAM"

@@ -1,0 +1,53 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: EC2 bastion Template for CloudFormation Demo
+#Metadata: 
+
+Parameters: 
+  StackPrefix:
+    Description: Stack Resource Name Prefix
+    Type: String
+    Default: Demo    
+  # If you need more enviroment type then you can customize these allowed values
+  EnvironmentType:
+    Description: The environment type
+    Type: String
+    AllowedValues: ["Dev", "Staging", "Production"]
+    Default: Dev
+  KeyPairName:
+    Description: KeyPair Name
+    Type: String
+    Default: myKeyPair
+  AMIImageId:
+    Description: AMI Image ID
+    Type: String
+    Default: ami-03d79d440297083e3
+  EC2InstanceType:
+    Description: EC2 Instance Type
+    Type: String
+    Default: t2.micro
+
+#Mappings:   
+
+#Conditions: 
+
+Resources: 
+  BastionEC2:
+    Type: AWS::EC2::Instance
+    Properties:
+      KeyName: !Ref KeyPairName      
+      ImageId: !Ref AMIImageId
+      InstanceType: !Ref EC2InstanceType 
+      #IamInstanceProfile:
+      #NetworkInterfaces
+      SecurityGroupIds:
+        - Fn::ImportValue: !Sub ${StackPrefix}-BastionSecurityGroup-ID
+      SubnetId:
+        Fn::ImportValue: !Sub ${StackPrefix}-PublicSubnetOneId      
+      Tags:
+        - Key: Name
+          Value: !Sub ${StackPrefix}-Bastion
+
+Outputs:
+  BastionDNSName: 
+    Description: EC2 Instance Public DNS Name
+    Value: !GetAtt BastionEC2.PublicDnsName
