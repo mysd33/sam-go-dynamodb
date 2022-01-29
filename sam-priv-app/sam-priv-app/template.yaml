@@ -10,31 +10,150 @@ Globals:
   Function:
     Timeout: 5
 
+Parameters:      
+  StackPrefix:
+    Description: Stack Resource Name Prefix
+    Type: String
+    Default: Demo  
+  EnvironmentType:
+    Description: The environment type
+    Type: String
+    AllowedValues: ["Dev", "Staging", "Production"]
+    Default: Dev
+Mappings:
+  # VPC/Subnet Cidr Block for Environment Type
+  # If you need more IP addresses then you can customize these ranges
+  CidrConfig:
+    Dev:
+      VPC: 10.0.0.0/16
+      PublicOne: 10.0.0.0/24
+      PublicTwo: 10.0.1.0/24
+      PrivateOne: 10.0.2.0/24
+      PrivateTwo: 10.0.3.0/24
+    Staging:
+      VPC: 10.1.0.0/16
+      PublicOne: 10.1.0.0/24
+      PublicTwo: 10.1.1.0/24
+      PrivateOne: 10.1.2.0/24
+      PrivateTwo: 10.1.3.0/24
+    Production:
+      VPC: 10.2.0.0/16
+      PublicOne: 10.2.0.0/24
+      PublicTwo: 10.2.1.0/24
+      PrivateOne: 10.2.2.0/24
+      PrivateTwo: 10.2.3.0/24
+             
 Resources:
   HelloWorldFunction:
-    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Type: AWS::Serverless::Function
     Properties:
       CodeUri: hello-world/
       Handler: hello-world
       Runtime: go1.x
-      Tracing: Active # https://docs.aws.amazon.com/lambda/latest/dg/lambda-x-ray.html
+      Tracing: Active
+      Policies:
+        - AWSLambdaBasicExecutionRole
+        - AWSLambdaVPCAccessExecutionRole
       Events:
         CatchAll:
-          Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+          Type: Api
           Properties:
             Path: /hello
             Method: GET
-      Environment: # More info about Env Vars: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#environment-object
+            RestApiId: !Ref HelloApi
+      Environment: 
         Variables:
           PARAM1: VALUE
 
+# API Gatway Private APIサンプル参考情報
+# https://sun-blog.site/%E3%80%90aws%E3%80%91sam%E3%81%A7private-api%EF%BC%88api-gateway-lambda%EF%BC%89/#template.yaml
+# https://betterprogramming.pub/private-serverless-rest-api-with-lambda-using-sam-2eb31864b243
+
+# Security Group for VPC Endpoint  
+  PrivateAPISecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      VpcId:
+        Fn::ImportValue: !Sub ${StackPrefix}-VPC-ID
+      GroupDescription: Access to the API Gateway Private API
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: !FindInMap [CidrConfig, !Ref EnvironmentType, VPC]
+      Tags:
+        - Key: Name
+          Value: !Sub ${StackPrefix}-PrivateAPI-SG
+
+# VPC Endpoint for API Gateway
+  PrivateAPIVPCEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:      
+      VpcEndpointType: Interface
+      ServiceName: !Sub com.amazonaws.${AWS::Region}.execute-api
+      SubnetIds:
+        - Fn::ImportValue: !Sub ${StackPrefix}-PrivateSubnetOneId
+        - Fn::ImportValue: !Sub ${StackPrefix}-PrivateSubnetTwoId
+      VpcId: 
+        Fn::ImportValue: !Sub ${StackPrefix}-VPC-ID          
+      SecurityGroupIds: 
+        - !GetAtt PrivateAPISecurityGroup.GroupId
+      PrivateDnsEnabled: true
+
+# Private API Gateway
+  HelloApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: Prod      
+      EndpointConfiguration:
+        Type: PRIVATE
+        VPCEndpointIds:
+          - !Ref PrivateAPIVPCEndpoint
+      #DefinitionUri:          
+      #TODO: openapiの定義を別ファイルに切り出す
+      DefinitionBody:
+        openapi: 3.0.0
+        info:
+          title: private-hello-api
+          description: private-hello-api
+        schemas:
+          - https
+        consumes:
+          - application/json
+        produces:
+          - application/json
+        paths:
+          /hello:
+            get:
+              x-amazon-apigateway-integration:
+                #TODO OpenAPI拡張の理解
+                #https://docs.aws.amazon.com/ja_jp/apigateway/latest/developerguide/api-gateway-swagger-extensions-integration.html
+                type: aws_proxy
+                uri: !Join [ "", [ !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:", !Ref HelloWorldFunction, "/invocations"] ]
+                connectionType: "INTERNET"
+                contentHandling: CONVERT_TO_TEXT
+                httpMethod: POST
+                passthroughBehavior: when_no_templates                
+                payloadFormatVersion: 1.0
+        x-amazon-apigateway-policy:          
+          #TODO OpenAPI拡張の理解
+          #https://docs.aws.amazon.com/ja_jp/apigateway/latest/developerguide/openapi-extensions-policy.html
+          Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Principal: '*'
+              Action: 'execute-api:Invoke'
+              Resource:
+                - !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:*/*'
+              Condition:
+                StringEquals:
+                  aws:SourceVpce: !Ref PrivateAPIVPCEndpoint
+      #TracingEnabled: true
+
 Outputs:
-  # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function
-  # Find out more about other implicit resources you can reference within SAM
-  # https://github.com/awslabs/serverless-application-model/blob/master/docs/internals/generated_resources.rst#api
   HelloWorldAPI:
     Description: "API Gateway endpoint URL for Prod environment for First Function"
-    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/hello/"
+    Value: !Sub "https://${HelloApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/hello/"
   HelloWorldFunction:
     Description: "First Lambda Function ARN"
     Value: !GetAtt HelloWorldFunction.Arn

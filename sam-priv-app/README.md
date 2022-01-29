@@ -42,3 +42,8 @@ sam deploy --guided
 #2回目以降は
 sam deploy
 ```
+
+* EC2(Bation)へTeraTermでログインして、動作確認
+```sh
+curl https://5h5zxybd3c.execute-api.ap-northeast-1.amazonaws.com/Prod/hello/
+```
