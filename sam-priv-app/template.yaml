@@ -5,10 +5,11 @@ Description: >
   
   Sample SAM Template for sam-priv-app
 
-# More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
 Globals:
   Function:
     Timeout: 5
+  Api:
+    OpenApiVersion: 3.0.3
 
 Parameters:      
   StackPrefix:
