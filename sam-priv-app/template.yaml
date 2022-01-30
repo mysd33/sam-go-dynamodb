@@ -70,6 +70,7 @@ Resources:
 # API Gatway Private APIサンプル参考情報
 # https://sun-blog.site/%E3%80%90aws%E3%80%91sam%E3%81%A7private-api%EF%BC%88api-gateway-lambda%EF%BC%89/#template.yaml
 # https://betterprogramming.pub/private-serverless-rest-api-with-lambda-using-sam-2eb31864b243
+# https://zenn.dev/kazu777/articles/2275dd27c3c9cd
 
 # Security Group for VPC Endpoint  
   PrivateAPISecurityGroup:
@@ -102,7 +103,7 @@ Resources:
         - !GetAtt PrivateAPISecurityGroup.GroupId
       PrivateDnsEnabled: true
 
-# Private API Gateway
+# API Gateway Private REST API
   HelloApi:
     Type: AWS::Serverless::Api
     Properties:
@@ -110,46 +111,12 @@ Resources:
       EndpointConfiguration:
         Type: PRIVATE
         VPCEndpointIds:
-          - !Ref PrivateAPIVPCEndpoint
-      #DefinitionUri:          
-      #TODO: openapiの定義を別ファイルに切り出す
+          - !Ref PrivateAPIVPCEndpoint      
       DefinitionBody:
-        openapi: 3.0.0
-        info:
-          title: private-hello-api
-          description: private-hello-api
-        schemas:
-          - https
-        consumes:
-          - application/json
-        produces:
-          - application/json
-        paths:
-          /hello:
-            get:
-              x-amazon-apigateway-integration:
-                #TODO OpenAPI拡張の理解
-                #https://docs.aws.amazon.com/ja_jp/apigateway/latest/developerguide/api-gateway-swagger-extensions-integration.html
-                type: aws_proxy
-                uri: !Join [ "", [ !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:", !Ref HelloWorldFunction, "/invocations"] ]
-                connectionType: "INTERNET"
-                contentHandling: CONVERT_TO_TEXT
-                httpMethod: POST
-                passthroughBehavior: when_no_templates                
-                payloadFormatVersion: 1.0
-        x-amazon-apigateway-policy:          
-          #TODO OpenAPI拡張の理解
-          #https://docs.aws.amazon.com/ja_jp/apigateway/latest/developerguide/openapi-extensions-policy.html
-          Version: '2012-10-17'
-          Statement:
-            - Effect: Allow
-              Principal: '*'
-              Action: 'execute-api:Invoke'
-              Resource:
-                - !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:*/*'
-              Condition:
-                StringEquals:
-                  aws:SourceVpce: !Ref PrivateAPIVPCEndpoint
+        Fn::Transform:
+          Name: AWS::Include
+          Parameters:
+            Location: ./openapi.yaml
       #TracingEnabled: true
 
 Outputs:
