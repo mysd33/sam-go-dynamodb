@@ -12,11 +12,17 @@ aws cloudformation create-stack --stack-name Demo-VPC-Stack --template-body file
 aws cloudformation validate-template --template-body file://cfn-sg.yaml
 aws cloudformation create-stack --stack-name Demo-SG-Stack --template-body file://cfn-sg.yaml
 ```
+* 必要に応じて、接続元IPアドレス等のパラメータを指定
+    * 「--parameters ParameterKey=TerminalCidrIP,ParameterValue=X.X.X.X/X」
+
 ## 3. EC2(Basion)の作成
 ```sh
 aws cloudformation validate-template --template-body file://cfn-bastion-ec2.yaml
 aws cloudformation create-stack --stack-name Demo-Bastion-Stack --template-body file://cfn-bastion-ec2.yaml
 ```
+* 必要に応じてキーペア名等のパラメータを指定
+    * 「--parameters ParameterKey=KeyPairName,ParameterValue=myKeyPair」
+
 * CloudFormationの出力「BastionDNSName」に表示されるドメイン名の値でアクセスできます。
 
 ## 4. NAT Gatewayの作成とプライベートサブネットのルートテーブル更新
