@@ -1,5 +1,8 @@
 # Private API APIGatewayサンプルの下準備
 
+## 構成イメージ
+![構成イメージ](image/demo.drawio.png)
+
 ## 1. VPCおよびサブネット、InternetGateway等の作成
 ```sh
 cd cfn
