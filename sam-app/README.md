@@ -11,7 +11,11 @@ sam build
 # viper用のconfigを.aws-samフォルダにコピー（Windowsでのxcopyの例）
 xcopy /I config .aws-sam\build\GetUsersFunction\config
 xcopy /I config .aws-sam\build\PostUsersFunction\config
+
+# Windowsにmakeをインストールすればmakeでもいけます
+make 
 ```
+
 ## SAM デプロイ
 ```sh
 sam deploy --guided
