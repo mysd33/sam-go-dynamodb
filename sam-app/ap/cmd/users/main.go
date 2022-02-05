@@ -31,8 +31,7 @@ var (
 )
 
 //リクエストデータ
-//TODO: request → Request
-type request struct {
+type Request struct {
 	Name string `json:"name"`
 }
 
@@ -112,8 +111,8 @@ func parseGetRequest(req events.APIGatewayProxyRequest) (string, error) {
 }
 
 //Postリクエストデータの解析
-func parsePostRequest(req events.APIGatewayProxyRequest) (*request, error) {
-	var r request
+func parsePostRequest(req events.APIGatewayProxyRequest) (*Request, error) {
+	var r Request
 	if req.HTTPMethod != http.MethodPost {
 		return &r, errors.Errorf("use POST request")
 	}
