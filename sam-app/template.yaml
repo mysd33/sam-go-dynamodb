@@ -16,6 +16,9 @@ Parameters:
   UsersTableName:
     Type: String
     Default: users
+  TracingValue:
+    Type: String
+    Default: Active
 
 Resources:
   PostUsersFunction:
@@ -26,7 +29,7 @@ Resources:
       Handler: users
       Runtime: go1.x      
       Policies: AmazonDynamoDBFullAccess
-      Tracing: Active # https://docs.aws.amazon.com/lambda/latest/dg/lambda-x-ray.html
+      Tracing: !Ref TracingValue # https://docs.aws.amazon.com/lambda/latest/dg/lambda-x-ray.html
       Events:
         PostEvent:
           Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
@@ -52,6 +55,7 @@ Resources:
       Runtime: go1.x
       Policies: 
       - AmazonDynamoDBReadOnlyAccess      
+      Tracing: !Ref TracingValue
       Tracing: Active
       Events:
         GetEvent:
