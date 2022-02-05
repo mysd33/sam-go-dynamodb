@@ -18,9 +18,15 @@ make
 
 ## SAM デプロイ
 ```sh
+# 1回目は
 sam deploy --guided
+# Windowsにmakeをインストールすればmakeでもいけます
+make deploy_guided
+
 # 2回目以降は
 sam deploy
+# Windowsにmakeをインストールすればmakeでもいけます
+make deploy
 ```
 ## 実行
 * curlコマンドを実行
