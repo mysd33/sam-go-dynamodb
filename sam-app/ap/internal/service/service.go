@@ -1,17 +1,20 @@
 package service
 
-import "ap/internal/db"
+import (
+	"ap/internal/entity"
+	"ap/internal/repository"
+)
 
 type UserService struct {
-	Repository *db.UserRepository
+	Repository *repository.UserRepository
 }
 
-func (us UserService) Regist(userName string) (*db.User, error) {
-	user := db.User{}
+func (us UserService) Regist(userName string) (*entity.User, error) {
+	user := entity.User{}
 	user.Name = userName
 	return us.Repository.PutUser(&user)
 }
 
-func (us UserService) Find(userId string) (*db.User, error) {
+func (us UserService) Find(userId string) (*entity.User, error) {
 	return us.Repository.GetUser(userId)
 }

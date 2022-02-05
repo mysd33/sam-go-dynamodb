@@ -1,8 +1,10 @@
-package db
+package repository
 
 import (
 	"context"
 	"os"
+
+	"ap/internal/entity"
 
 	"example.com/apbase/pkg/id"
 
@@ -24,11 +26,6 @@ type UserRepository struct {
 	Context  context.Context
 }
 
-type User struct {
-	ID   string `json:"user_id"`
-	Name string `json:"user_name"`
-}
-
 func NewUserRepository() UserRepository {
 	sess := session.Must(session.NewSession(&aws.Config{
 		Region: aws.String(region)}),
@@ -38,11 +35,11 @@ func NewUserRepository() UserRepository {
 	return UserRepository{Instance: dynamo}
 }
 
-func (d UserRepository) GetUser(userId string) (*User, error) {
+func (d UserRepository) GetUser(userId string) (*entity.User, error) {
 	return d.doGetUser(userId, d.Context)
 }
 
-func (d UserRepository) doGetUser(userId string, ctx context.Context) (*User, error) {
+func (d UserRepository) doGetUser(userId string, ctx context.Context) (*entity.User, error) {
 	//Itemの取得（X-Rayトレース）
 	result, err := d.Instance.GetItemWithContext(ctx, &dynamodb.GetItemInput{
 		TableName: aws.String(userTable),
@@ -59,7 +56,7 @@ func (d UserRepository) doGetUser(userId string, ctx context.Context) (*User, er
 	if result.Item == nil {
 		return nil, nil
 	}
-	user := User{}
+	user := entity.User{}
 	err = dynamodbattribute.UnmarshalMap(result.Item, &user)
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to marshal item")
@@ -67,11 +64,11 @@ func (d UserRepository) doGetUser(userId string, ctx context.Context) (*User, er
 	return &user, nil
 }
 
-func (d UserRepository) PutUser(user *User) (*User, error) {
+func (d UserRepository) PutUser(user *entity.User) (*entity.User, error) {
 	return d.doPutUser(user, d.Context)
 }
 
-func (d UserRepository) doPutUser(user *User, ctx context.Context) (*User, error) {
+func (d UserRepository) doPutUser(user *entity.User, ctx context.Context) (*entity.User, error) {
 	//ID採番
 	userId := id.GenerateId()
 	user.ID = userId

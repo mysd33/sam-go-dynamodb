@@ -10,8 +10,9 @@ import (
 
 	"example.com/apbase/pkg/api"
 
-	"ap/internal/db"
-	apsvc "ap/internal/service"
+	"ap/internal/entity"
+	"ap/internal/repository"
+	"ap/internal/service"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
@@ -21,9 +22,9 @@ import (
 
 var (
 	// Service
-	userService apsvc.UserService
+	userService service.UserService
 	// Repository
-	userRepository db.UserRepository
+	userRepository repository.UserRepository
 	// Config
 	config *Config
 )
@@ -68,8 +69,8 @@ func loadConfig() (*Config, error) {
 
 //コードルドスタート時の初期化処理
 func init() {
-	userRepository = db.NewUserRepository()
-	userService = apsvc.UserService{Repository: &userRepository}
+	userRepository = repository.NewUserRepository()
+	userService = service.UserService{Repository: &userRepository}
 
 	var err error
 	config, err = loadConfig()
@@ -157,7 +158,7 @@ func parsePostRequest(req events.APIGatewayProxyRequest) (*request, error) {
 }
 
 //レスポンスデータの生成
-func formatResponse(user *db.User) string {
+func formatResponse(user *entity.User) string {
 	resp, _ := json.Marshal(user)
 	return string(resp)
 }
