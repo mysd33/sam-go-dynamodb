@@ -3,11 +3,12 @@ package main
 import (
 	"context"
 	"encoding/json"
-	"log"
 	"net/http"
 
 	"example.com/apbase/pkg/api"
 	"example.com/apbase/pkg/config"
+	"example.com/apbase/pkg/logging"
+	"go.uber.org/zap"
 
 	"ap/internal/entity"
 	"ap/internal/repository"
@@ -23,6 +24,8 @@ var (
 	userService service.UserService
 	// Repository
 	userRepository repository.UserRepository
+	// Logger
+	log logging.Logger
 	// Config
 	cfg *config.Config
 )
@@ -36,14 +39,16 @@ type request struct {
 //コードルドスタート時の初期化処理
 func init() {
 	var err error
+	z, _ := zap.NewProduction()
+	log = logging.ZapLogger{Log: z.Sugar()}
+	cfg, err = config.LoadConfig()
 
 	userRepository = repository.NewUserRepository()
-	userService = service.UserService{Repository: &userRepository}
+	userService = service.UserService{Repository: &userRepository, Log: log, Config: cfg}
 
-	cfg, err = config.LoadConfig()
 	if err != nil {
 		//TODO: エラーハンドリング
-		log.Fatalf("初期化処理エラー:%s", err.Error())
+		log.Fatal("初期化処理エラー:%s", err.Error())
 		panic(err.Error())
 	}
 
@@ -54,9 +59,6 @@ func handler(ctx context.Context, request events.APIGatewayProxyRequest) (events
 	//TODO: dynamoDBのAP基盤機能側でContext格納するようにリファクタ
 	//ctxの格納
 	userRepository.Context = ctx
-
-	//TODO: とりあえずの設定ファイルの読み込み確認
-	log.Printf("hoge.name=%s", cfg.Hoge.Name)
 
 	//Getリクエストの処理
 	if request.HTTPMethod == http.MethodGet {
