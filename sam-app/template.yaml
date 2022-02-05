@@ -13,9 +13,6 @@ Globals:
     OpenApiVersion: 3.0.3    
     
 Parameters:
-  Region:
-    Type: String
-    Default: ap-northeast-1
   UsersTableName:
     Type: String
     Default: users
@@ -38,7 +35,7 @@ Resources:
             Method: POST
       Environment: 
         Variables:
-          REGION: !Ref Region
+          REGION: !Sub ${AWS::Region}
           USERS_TABLE_NAME: !Ref UsersTableName
       #Deployment Configurtion           
       AutoPublishAlias: live            
@@ -64,7 +61,7 @@ Resources:
             Method: Get
       Environment: 
         Variables:
-          REGION: !Ref Region
+          REGION: !Sub ${AWS::Region}
           USERS_TABLE_NAME: !Ref UsersTableName        
       #Deployment Configurtion           
       AutoPublishAlias: live
