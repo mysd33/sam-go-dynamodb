@@ -39,15 +39,13 @@ func init() {
 	var err error
 	log = logging.NewLogger()
 	cfg, err = config.LoadConfig()
-	userRepository = repository.NewUserRepository()
-	userService = service.NewUserService(log, cfg, &userRepository)
-
 	if err != nil {
 		//TODO: エラーハンドリング
 		log.Fatal("初期化処理エラー:%s", err.Error())
 		panic(err.Error())
 	}
-
+	userRepository = repository.NewUserRepository()
+	userService = service.NewUserService(log, cfg, &userRepository)
 }
 
 //ハンドラメソッド
