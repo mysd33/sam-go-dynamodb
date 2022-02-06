@@ -21,9 +21,10 @@ var (
 	userTable = os.Getenv("USERS_TABLE_NAME")
 )
 
-type UserRepository struct {
-	Instance *dynamodb.DynamoDB
-	Context  context.Context
+type UserRepository interface {
+	SetContext(ctx context.Context)
+	GetUser(userId string) (*entity.User, error)
+	PutUser(user *entity.User) (*entity.User, error)
 }
 
 func NewUserRepository() UserRepository {
@@ -32,18 +33,26 @@ func NewUserRepository() UserRepository {
 	)
 	dynamo := dynamodb.New(sess)
 	xray.AWS(dynamo.Client)
-	return UserRepository{Instance: dynamo}
+	return &UserRepositoryImpl{Instance: dynamo}
 }
 
-func (d UserRepository) GetUser(userId string) (*entity.User, error) {
+type UserRepositoryImpl struct {
+	Instance *dynamodb.DynamoDB
+	Context  context.Context
+}
+
+func (d *UserRepositoryImpl) SetContext(ctx context.Context) {
+	d.Context = ctx
+}
+
+func (d *UserRepositoryImpl) GetUser(userId string) (*entity.User, error) {
 	return d.doGetUser(userId, d.Context)
 }
 
-func (d UserRepository) doGetUser(userId string, ctx context.Context) (*entity.User, error) {
+func (d *UserRepositoryImpl) doGetUser(userId string, ctx context.Context) (*entity.User, error) {
 	//Itemの取得（X-Rayトレース）
 	result, err := d.Instance.GetItemWithContext(ctx, &dynamodb.GetItemInput{
 		TableName: aws.String(userTable),
-		//TODO: map[string]*の意味わからず
 		Key: map[string]*dynamodb.AttributeValue{
 			"user_id": {
 				S: aws.String(userId),
@@ -64,11 +73,11 @@ func (d UserRepository) doGetUser(userId string, ctx context.Context) (*entity.U
 	return &user, nil
 }
 
-func (d UserRepository) PutUser(user *entity.User) (*entity.User, error) {
+func (d *UserRepositoryImpl) PutUser(user *entity.User) (*entity.User, error) {
 	return d.doPutUser(user, d.Context)
 }
 
-func (d UserRepository) doPutUser(user *entity.User, ctx context.Context) (*entity.User, error) {
+func (d *UserRepositoryImpl) doPutUser(user *entity.User, ctx context.Context) (*entity.User, error) {
 	//ID採番
 	userId := id.GenerateId()
 	user.ID = userId

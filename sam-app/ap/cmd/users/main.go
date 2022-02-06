@@ -8,7 +8,6 @@ import (
 	"example.com/apbase/pkg/api"
 	"example.com/apbase/pkg/config"
 	"example.com/apbase/pkg/logging"
-	"go.uber.org/zap"
 
 	"ap/internal/entity"
 	"ap/internal/repository"
@@ -38,12 +37,10 @@ type Request struct {
 //コードルドスタート時の初期化処理
 func init() {
 	var err error
-	z, _ := zap.NewProduction()
-	log = logging.ZapLogger{Log: z.Sugar()}
+	log = logging.NewLogger()
 	cfg, err = config.LoadConfig()
-
 	userRepository = repository.NewUserRepository()
-	userService = service.UserServiceImpl{Repository: &userRepository, Log: log, Config: cfg}
+	userService = service.NewUserService(log, cfg, &userRepository)
 
 	if err != nil {
 		//TODO: エラーハンドリング
@@ -57,7 +54,7 @@ func init() {
 func handler(ctx context.Context, request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
 	//TODO: dynamoDBのAP基盤機能側でContext格納するようにリファクタ
 	//ctxの格納
-	userRepository.Context = ctx
+	userRepository.SetContext(ctx)
 
 	//Getリクエストの処理
 	if request.HTTPMethod == http.MethodGet {

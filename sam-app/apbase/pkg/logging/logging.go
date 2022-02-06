@@ -14,6 +14,11 @@ type Logger interface {
 	Fatal(template string, args ...interface{})
 }
 
+func NewLogger() Logger {
+	z, _ := zap.NewProduction()
+	return ZapLogger{Log: z.Sugar()}
+}
+
 type ZapLogger struct {
 	Log *zap.SugaredLogger
 }
