@@ -43,7 +43,7 @@ func init() {
 	cfg, err = config.LoadConfig()
 
 	userRepository = repository.NewUserRepository()
-	userService = service.UserService{Repository: &userRepository, Log: log, Config: cfg}
+	userService = service.UserServiceImpl{Repository: &userRepository, Log: log, Config: cfg}
 
 	if err != nil {
 		//TODO: エラーハンドリング
