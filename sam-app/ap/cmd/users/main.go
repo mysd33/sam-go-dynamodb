@@ -75,7 +75,10 @@ func getHandler(ctx context.Context, request events.APIGatewayProxyRequest) (eve
 		return api.ErrorResponse(err)
 	}
 	//レスポンスデータの返却
-	resultString := formatResponse(result)
+	resultString, err := formatResponse(result)
+	if err != nil {
+		return api.ErrorResponse(err)
+	}
 	return api.OkResponse(resultString)
 }
 
@@ -92,7 +95,10 @@ func postHandler(ctx context.Context, request events.APIGatewayProxyRequest) (ev
 		return api.ErrorResponse(err)
 	}
 	//レスポンスデータの返却
-	resultString := formatResponse(result)
+	resultString, err := formatResponse(result)
+	if err != nil {
+		return api.ErrorResponse(err)
+	}
 	return api.OkResponse(resultString)
 }
 
@@ -108,22 +114,17 @@ func parseGetRequest(req events.APIGatewayProxyRequest) (string, error) {
 //Postリクエストデータの解析
 func parsePostRequest(req events.APIGatewayProxyRequest) (*Request, error) {
 	var r Request
-	if req.HTTPMethod != http.MethodPost {
-		return &r, errors.Errorf("use POST request")
-	}
-
-	err := json.Unmarshal([]byte(req.Body), &r)
-	if err != nil {
-		return &r, errors.Wrapf(err, "failed to parse request")
-	}
-
-	return &r, nil
+	err := api.ParsePostRequest(req, &r)
+	return &r, err
 }
 
 //レスポンスデータの生成
-func formatResponse(user *entity.User) string {
-	resp, _ := json.Marshal(user)
-	return string(resp)
+func formatResponse(user *entity.User) (string, error) {
+	resp, err := json.Marshal(user)
+	if err != nil {
+		return "", errors.Wrapf(err, "failed to parse request")
+	}
+	return string(resp), nil
 }
 
 //Main関数

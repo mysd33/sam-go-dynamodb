@@ -1,11 +1,24 @@
 package api
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 
 	"github.com/aws/aws-lambda-go/events"
+	"github.com/pkg/errors"
 )
+
+func ParsePostRequest(req events.APIGatewayProxyRequest, v interface{}) error {
+	if req.HTTPMethod != http.MethodPost {
+		return errors.Errorf("use POST request")
+	}
+	err := json.Unmarshal([]byte(req.Body), v)
+	if err != nil {
+		return errors.Wrapf(err, "failed to parse request")
+	}
+	return nil
+}
 
 func OkResponse(result string) (events.APIGatewayProxyResponse, error) {
 	return response(
