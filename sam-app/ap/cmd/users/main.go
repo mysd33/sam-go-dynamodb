@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"example.com/apbase/pkg/apcontext"
 	"example.com/apbase/pkg/api"
 	"example.com/apbase/pkg/config"
 	"example.com/apbase/pkg/logging"
@@ -21,8 +22,6 @@ import (
 var (
 	// Service
 	userService service.UserService
-	// Repository
-	userRepository repository.UserRepository
 	// Logger
 	log logging.Logger
 	// Config
@@ -44,15 +43,14 @@ func init() {
 		log.Fatal("初期化処理エラー:%s", err.Error())
 		panic(err.Error())
 	}
-	userRepository = repository.NewUserRepository()
+	userRepository := repository.NewUserRepository()
 	userService = service.NewUserService(log, cfg, &userRepository)
 }
 
 //ハンドラメソッド
 func handler(ctx context.Context, request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
-	//TODO: dynamoDBのAP基盤機能側でContext格納するようにリファクタ
 	//ctxの格納
-	userRepository.SetContext(ctx)
+	apcontext.Context = ctx
 
 	//Getリクエストの処理
 	if request.HTTPMethod == http.MethodGet {

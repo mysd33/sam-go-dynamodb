@@ -6,6 +6,7 @@ import (
 
 	"ap/internal/entity"
 
+	"example.com/apbase/pkg/apcontext"
 	"example.com/apbase/pkg/id"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -22,7 +23,6 @@ var (
 )
 
 type UserRepository interface {
-	SetContext(ctx context.Context)
 	GetUser(userId string) (*entity.User, error)
 	PutUser(user *entity.User) (*entity.User, error)
 }
@@ -41,12 +41,8 @@ type UserRepositoryImpl struct {
 	Context  context.Context
 }
 
-func (d *UserRepositoryImpl) SetContext(ctx context.Context) {
-	d.Context = ctx
-}
-
 func (d *UserRepositoryImpl) GetUser(userId string) (*entity.User, error) {
-	return d.doGetUser(userId, d.Context)
+	return d.doGetUser(userId, apcontext.Context)
 }
 
 func (d *UserRepositoryImpl) doGetUser(userId string, ctx context.Context) (*entity.User, error) {
@@ -74,7 +70,7 @@ func (d *UserRepositoryImpl) doGetUser(userId string, ctx context.Context) (*ent
 }
 
 func (d *UserRepositoryImpl) PutUser(user *entity.User) (*entity.User, error) {
-	return d.doPutUser(user, d.Context)
+	return d.doPutUser(user, apcontext.Context)
 }
 
 func (d *UserRepositoryImpl) doPutUser(user *entity.User, ctx context.Context) (*entity.User, error) {
