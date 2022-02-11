@@ -2,9 +2,9 @@ version = 0.1
 [default]
 [default.deploy]
 [default.deploy.parameters]
-stack_name = "sam-priv-app"
-s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-8lv3pbj15eo0"
-s3_prefix = "sam-priv-app"
+stack_name = "sam-priv-app-stack"
+s3_bucket = "mysd33bucket123sam"
+s3_prefix = "sam-priv-app-stack"
 region = "ap-northeast-1"
 capabilities = "CAPABILITY_IAM"
 parameter_overrides = "StackPrefix=\"Demo\" EnvironmentType=\"Dev\""

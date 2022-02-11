@@ -41,21 +41,46 @@ aws cloudformation create-stack --stack-name Demo-NATGW-Stack --template-body fi
 #sam-priv-appフォルダに戻る
 cd ..
 sam build
+# Windowsにmakeをインストールすればmakeでもいけます
+make
 ```
+
 * 必要に応じてローカル実行可能
 ```sh
 sam local invoke
 sam local start-api
 curl http://127.0.0.1:3000/hello
 ```
+
 * SAMデプロイ
 ```sh
+# 1回目は
 sam deploy --guided
-#2回目以降は
+# Windowsにmakeをインストールすればmakeでもいけます
+make deploy_guided
+
+# 2回目以降は
 sam deploy
+# Windowsにmakeをインストールすればmakeでもいけます
+make deploy
 ```
 
 * EC2(Bation)へTeraTermでログインして、動作確認
 ```sh
 curl https://5h5zxybd3c.execute-api.ap-northeast-1.amazonaws.com/Prod/hello/
+```
+
+## SAMのCloudFormationスタック削除
+```sh
+# Windowsにmakeをインストールすればmakeでもいけます
+make delete
+```
+
+## その他のCloudFormationスタック削除
+```sh
+aws cloudformation delete-stack --stack-name Demo-NATGW-Stack
+aws cloudformation delete-stack --stack-name Demo-SG-Stack
+aws cloudformation delete-stack --stack-name Demo-Bastion-Stack
+aws cloudformation delete-stack --stack-name Demo-VPC-Stack 
+
 ```
