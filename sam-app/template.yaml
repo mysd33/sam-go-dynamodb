@@ -76,19 +76,45 @@ Resources:
       DeploymentPreference:
         #Type: Linear10PercentEvery1Minute
         Type: AllAtOnce
+  
+  #IAM Role for API Gateway Account
+  APIGatewayRole:
+    Type: AWS::IAM::Role
+    Properties:      
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Action: sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service: apigateway.amazonaws.com      
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AmazonAPIGatewayPushToCloudWatchLogs
   #API Gateway
+  ApiGwAccountConfig:
+    Type: AWS::ApiGateway::Account
+    Properties:
+      CloudWatchRoleArn: !GetAtt APIGatewayRole.Arn
+
   UserApi:
     Type: AWS::Serverless::Api
     Properties:
       StageName: !Sub ${Stage}
       EndpointConfiguration:
         Type: REGIONAL
+      #https://qiita.com/couzie/items/17b6fb94e92dd43d2743        
+      MethodSettings:
+        - DataTraceEnabled: true
+          LoggingLevel: 'ERROR'
+          ResourcePath: '/*'
+          HttpMethod: '*'
       DefinitionBody:
         Fn::Transform:
           Name: AWS::Include
           Parameters:
             Location: ./openapi.yaml
-#https://dev.classmethod.jp/articles/sam-try-and-error/
+  #Lambda Permission
+  #https://dev.classmethod.jp/articles/sam-try-and-error/
   LambdaPermissionPostUsersFunction:
     Type: "AWS::Lambda::Permission"
     Properties:
@@ -101,7 +127,7 @@ Resources:
       Action: lambda:InvokeFunction
       FunctionName: !Ref GetUsersFunction
       Principal: apigateway.amazonaws.com
-#DynamoDB
+  #DynamoDB
   UsersTable:
     Type: AWS::DynamoDB::Table
     Properties:
