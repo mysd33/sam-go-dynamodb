@@ -1,0 +1,98 @@
+openapi: 3.0.3
+#https://swagger.io/specification/
+info:
+  title: user-api
+  description: user-api
+  version: 1.0.0
+paths:
+  /users:
+    post:
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: 
+              type: object
+              properties:
+                name:
+                  type: string
+      responses:
+        '200':
+          description: OK. Return User Object.          
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User' 
+        '400':
+          description: Bad request.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'                                                            
+        '500':
+          description: Unexpected error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'                                            
+      x-amazon-apigateway-integration:
+        type: aws_proxy
+        uri:
+          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${PostUsersFunction.Arn}/invocations
+        connectionType: "INTERNET"
+        contentHandling: CONVERT_TO_TEXT
+        httpMethod: POST
+        passthroughBehavior: when_no_templates                
+        payloadFormatVersion: 1.0
+  /users/{user_id}:
+    get:
+      parameters:
+        - in: path
+          name: user_id
+          required: true
+          schema: string
+          description: User ID
+      responses:
+        '200':
+          description: OK. Return User Object.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          description: Bad request.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'                                                            
+        '500':
+          description: Unexpected error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'                                            
+      x-amazon-apigateway-integration:
+        type: aws_proxy
+        uri:
+          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${GetUsersFunction.Arn}/invocations
+        connectionType: "INTERNET"
+        contentHandling: CONVERT_TO_TEXT
+        httpMethod: POST
+        passthroughBehavior: when_no_templates                
+        payloadFormatVersion: 1.0
+components:
+  schemas:
+    User:
+      type: object
+      properties:
+        user_id:
+          type: string
+        user_name:
+          type: string
+    ErrorModel:
+      type: object
+      properties:
+        StatusCode:
+          type: string
+        Body:
+          type: string

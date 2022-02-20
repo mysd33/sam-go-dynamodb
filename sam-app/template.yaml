@@ -19,23 +19,28 @@ Parameters:
   TracingValue:
     Type: String
     Default: Active
+  Stage:
+    Type: String
+    Default: Prod
 
 Resources:
+  #Lambda
   PostUsersFunction:
-    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Type: AWS::Serverless::Function
     Properties:
       FunctionName: post-user-function
       CodeUri: ap/cmd/users/
       Handler: users
       Runtime: go1.x      
       Policies: AmazonDynamoDBFullAccess
-      Tracing: !Ref TracingValue # https://docs.aws.amazon.com/lambda/latest/dg/lambda-x-ray.html
+      Tracing: !Ref TracingValue
       Events:
         PostEvent:
-          Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+          Type: Api
           Properties:
             Path: /users
             Method: POST
+            RestApiId: !Ref UserApi
       Environment: 
         Variables:
           REGION: !Sub ${AWS::Region}
@@ -45,7 +50,6 @@ Resources:
       DeploymentPreference:
         #Type: Linear10PercentEvery1Minute
         Type: AllAtOnce
-
   GetUsersFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -55,14 +59,14 @@ Resources:
       Runtime: go1.x
       Policies: 
       - AmazonDynamoDBReadOnlyAccess      
-      Tracing: !Ref TracingValue
-      Tracing: Active
+      Tracing: !Ref TracingValue      
       Events:
         GetEvent:
           Type: Api
           Properties:            
             Path: /users/{user_id}
             Method: Get
+            RestApiId: !Ref UserApi            
       Environment: 
         Variables:
           REGION: !Sub ${AWS::Region}
@@ -72,7 +76,32 @@ Resources:
       DeploymentPreference:
         #Type: Linear10PercentEvery1Minute
         Type: AllAtOnce
-
+  #API Gateway
+  UserApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: !Sub ${Stage}
+      EndpointConfiguration:
+        Type: REGIONAL
+      DefinitionBody:
+        Fn::Transform:
+          Name: AWS::Include
+          Parameters:
+            Location: ./openapi.yaml
+#https://dev.classmethod.jp/articles/sam-try-and-error/
+  LambdaPermissionPostUsersFunction:
+    Type: "AWS::Lambda::Permission"
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref PostUsersFunction
+      Principal: apigateway.amazonaws.com
+  LambdaPermissionGetUsersFunction:
+    Type: "AWS::Lambda::Permission"
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref GetUsersFunction
+      Principal: apigateway.amazonaws.com
+#DynamoDB
   UsersTable:
     Type: AWS::DynamoDB::Table
     Properties:
@@ -92,8 +121,8 @@ Outputs:
   # Find out more about other implicit resources you can reference within SAM
   # https://github.com/awslabs/serverless-application-model/blob/master/docs/internals/generated_resources.rst#api
   UsersAPI:
-    Description: "API Gateway endpoint URL for Prod environment for First Function"
-    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/users/"
+    Description: "API Gateway endpoint URL for Prod environment"
+    Value: !Sub "https://${UserApi}.execute-api.${AWS::Region}.amazonaws.com/${Stage}/users/"
   GetUsersFunction:
     Description: "Get Users Lambda Function ARN"
     Value: !GetAtt GetUsersFunction.Arn
