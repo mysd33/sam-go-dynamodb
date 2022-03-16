@@ -2,6 +2,7 @@ STACK_NAME := sam-app-stack
 STACK_BUCKET := mysd33bucket123sam
 
 .PHONY: build
+.PHONY: unit_test
 .PHONY: deploy
 .PHONY: deploy_guided
 .PHONY: delete
@@ -12,6 +13,9 @@ build:
 	sam.cmd build
 	xcopy /I config .aws-sam\build\GetUsersFunction\config
 	xcopy /I config .aws-sam\build\PostUsersFunction\config
+
+unit_test:
+	cd ap & go test -v ./internal/...
 
 deploy_guided:
 # for windows
