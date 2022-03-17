@@ -1,8 +1,9 @@
-package service
+package service_test
 
 import (
 	"ap/internal/entity"
 	"ap/internal/repository"
+	"ap/internal/service"
 	"testing"
 
 	"example.com/apbase/pkg/config"
@@ -12,21 +13,21 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-//testfyによるMockの定義
 type MockUserRepository struct {
+	//testfyによるMockオブジェクト化
 	mock.Mock
 }
 
 func (d *MockUserRepository) GetUser(userId string) (*entity.User, error) {
-	//Mockの設定
-	ret := d.Called(userId)
-	return ret.Get(0).(*entity.User), nil
+	//インタフェースメソッド実装時、Mock.Calledメソッド呼び出し
+	args := d.Called(userId)
+	return args.Get(0).(*entity.User), args.Error(1)
 }
 
 func (d *MockUserRepository) PutUser(user *entity.User) (*entity.User, error) {
-	//Mockの設定
-	ret := d.Called(user)
-	return ret.Get(0).(*entity.User), nil
+	//インタフェースメソッド実装時、Mock.Calledメソッド呼び出し
+	args := d.Called(user)
+	return args.Get(0).(*entity.User), args.Error(1)
 }
 
 func TestRegist(t *testing.T) {
@@ -37,15 +38,19 @@ func TestRegist(t *testing.T) {
 	log := logging.NewLogger()
 	cfg := &config.Config{Hoge: config.Hoge{Name: "hoge"}}
 
-	//Mockの戻り値の設定
+	//Mockへの入力値と戻り値の設定
 	mock := new(MockUserRepository)
+	mockInputValue := entity.User{Name: inputUserName}
 	mockReturnValue := entity.User{ID: id.GenerateId(), Name: expectedName}
-	mock.On("PutUser", &entity.User{Name: inputUserName}).Return(&mockReturnValue)
+	mock.On("PutUser", &mockInputValue).Return(&mockReturnValue, nil)
 	var repository repository.UserRepository = mock
-	sut := NewUserService(log, cfg, &repository)
-
+	sut := service.NewUserService(log, cfg, &repository)
+	//テスト対象メソッドの呼び出し
 	actual, _ := sut.Regist(inputUserName)
 	println(actual)
-	//testifyによるAssert文
+	//テスト対象メソッドのAssert
 	assert.Equal(t, expectedName, actual.Name)
+	//Mockで定義した入力が呼ばれたことのAssert
+	mock.AssertExpectations(t)
+
 }
