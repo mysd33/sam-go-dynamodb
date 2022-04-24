@@ -1,4 +1,4 @@
-# Private API APIGatewayサンプルの下準備
+# Private APIでAPIGatewayを使う場合のサンプル
 
 ## 構成イメージ
 ![構成イメージ](image/demo.drawio.png)

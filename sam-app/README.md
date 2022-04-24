@@ -1,4 +1,4 @@
-# AWS SAM サンプル
+# AWS SAM Lambda/Goアプリケーションのサンプル
 
 * API Gateway + Lambda/go + DynamoDBで、いろいろgoのライブラリを試しているサンプル（作成中）
 ## 構成イメージ

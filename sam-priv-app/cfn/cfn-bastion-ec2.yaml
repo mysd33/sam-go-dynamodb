@@ -1,26 +1,20 @@
 AWSTemplateFormatVersion: 2010-09-09
-Description: EC2 bastion Template for CloudFormation Demo
+Description: EC2 bastion Template for CloudFormation Demo. Depends on cfn-vpc.yaml, cfn-sg.yaml
 #Metadata: 
 
 Parameters: 
   StackPrefix:
     Description: Stack Resource Name Prefix
     Type: String
-    Default: Demo    
-  # If you need more enviroment type then you can customize these allowed values
-  EnvironmentType:
-    Description: The environment type
-    Type: String
-    AllowedValues: ["Dev", "Staging", "Production"]
-    Default: Dev
+    Default: Demo
   KeyPairName:
     Description: KeyPair Name
     Type: String
     Default: myKeyPair
   AMIImageId:
     Description: AMI Image ID
-    Type: String
-    Default: ami-03d79d440297083e3
+    Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
+    Default: "/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2"
   EC2InstanceType:
     Description: EC2 Instance Type
     Type: String
