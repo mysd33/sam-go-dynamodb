@@ -2,6 +2,8 @@
 
 ## 構成イメージ
 ![構成イメージ](image/demo.drawio.png)
+* 現状は、API GatewayのPrivate APIに対応した部分に特化して実装
+* [sam-app](../sam-app/README.md)で実装しているサンプルAPも移植予定
 
 ## 1. VPCおよびサブネット、InternetGateway等の作成
 ```sh
